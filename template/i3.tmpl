@@ -1,0 +1,281 @@
+# -*- coding: utf-8 -*-
+# -- generic config (applies to all) -- #
+
+# -- basic config -- #
+
+# set mod key
+set $mod {{.I3.ModKey}}
+
+# set keyboard layout
+exec_always --no-startup-id setxkbmap gb
+
+# use rofi to show only applications with .desktop available
+bindsym Ctrl+space exec --no-startup-id i3-dmenu-desktop --dmenu="rofi -no-config -no-lazy-grab -show drun -theme ~/.config/rofi/config.rasi"
+
+# launch polybar on all monitors
+exec_always --no-startup-id $HOME/.local/bin/polybar-launch.sh
+
+# -- style config -- #
+
+# borders
+for_window [class="^.*"] border pixel 2
+
+# define colours
+set $base00 {{.Colors.Base00}}
+set $base01 {{.Colors.Base01}}
+set $base02 {{.Colors.Base02}}
+set $base03 {{.Colors.Base03}}
+set $base04 {{.Colors.Base04}}
+set $base05 {{.Colors.Base05}}
+set $base06 {{.Colors.Base06}}
+set $base07 {{.Colors.Base07}}
+set $base08 {{.Colors.Base08}}
+set $base09 {{.Colors.Base09}}
+set $base0A {{.Colors.Base0A}}
+set $base0B {{.Colors.Base0B}}
+set $base0C {{.Colors.Base0C}}
+set $base0D {{.Colors.Base0D}}
+set $base0E {{.Colors.Base0E}}
+set $base0F {{.Colors.Base0F}}
+
+# border colours
+# class                 border  bg      font    ind
+client.focused          $base0D $base0D $base00 $base01
+client.focused_inactive $base02 $base02 $base03 $base01
+client.unfocused        $base01 $base01 $base03 $base01
+client.urgent           $base02 $base08 $base07 $base08
+
+# -- set custom keybindings -- #
+
+# volume softkeys
+bindsym XF86AudioLowerVolume exec /usr/bin/pamixer -d 5
+bindsym XF86AudioRaiseVolume exec /usr/bin/pamixer -i 5
+bindsym XF86AudioMute exec /usr/bin/pamixer --toggle-mute
+bindsym XF86AudioPlay exec "/usr/bin/playerctl -p 'spotify,firefox' play-pause"
+# laptop hotkeys
+bindsym XF86AudioNext exec "/usr/bin/playerctl -p 'spotify,firefox' next"
+bindsym XF86AudioPrev exec "/usr/bin/playerctl -p 'spotify,firefox' previous"
+# ergonomic 4000 skip keys
+bindsym XF86Forward exec "/usr/bin/playerctl -p 'spotify,firefox' next"
+bindsym XF86Back exec "/usr/bin/playerctl -p 'spotify,firefox' previous"
+
+# backlight softkeys
+bindsym XF86MonBrightnessDown exec /usr/bin/brillo -u 200000 -U 10
+bindsym XF86MonBrightnessUp exec /usr/bin/brillo -u 200000 -A 10
+bindsym shift+XF86MonBrightnessDown exec /usr/bin/brillo -u 200000 -U 25
+bindsym shift+XF86MonBrightnessUp exec /usr/bin/brillo -u 200000 -A 25
+
+bindsym $mod+Shift+s exec --no-startup-id ~/.local/bin/floating-resize.sh
+
+bindsym Ctrl+Shift+a exec --no-startup-id ~/.local/bin/todoist-add-task.sh
+
+# -- functions -- #
+
+# set locker
+set $locker /usr/bin/light-locker-command -l
+bindsym Control+mod1+l exec $locker
+
+# power menu
+bindsym $mod+Shift+Delete mode "$power_toggle"
+bindsym XF86PowerOff mode "$power_toggle"
+set $power_toggle Power (l) lock | (e) logout | (s) suspend | (h) hibernate | (r) reboot | (Shift+s) shutdown
+mode "$power_toggle" {
+	bindsym l exec --no-startup-id $locker, mode "default"
+	bindsym e exec --no-startup-id i3-msg exit, mode "default"
+	bindsym s exec --no-startup-id $locker && systemctl suspend, mode "default"
+	bindsym h exec --no-startup-id $locker && systemctl hibernate, mode "default"
+	bindsym XF86PowerOff exec --no-startup-id $locker && systemctl hibernate, mode "default"
+	bindsym r exec --no-startup-id systemctl reboot, mode "default"
+	bindsym Shift+s exec --no-startup-id systemctl poweroff -i, mode "default"
+
+	# back to normal: Enter or Escape
+	bindsym Return mode "default"
+	bindsym Escape mode "default"
+}
+
+# -- standard i3 config -- #
+
+# window title font
+font pango:Ubuntu Mono 8
+
+# Use Mouse+$mod to drag floating windows to their wanted position
+floating_modifier $mod
+
+# start a terminal
+bindsym $mod+Return exec --no-startup-id /usr/bin/alacritty
+
+# kill focused window
+bindsym $mod+Shift+q kill
+
+# change focus
+bindsym $mod+j focus left
+bindsym $mod+k focus down
+bindsym $mod+l focus up
+bindsym $mod+semicolon focus right
+
+# alternatively, you can use the cursor keys:
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+# move focused window
+bindsym $mod+Shift+j move left
+bindsym $mod+Shift+k move down
+bindsym $mod+Shift+l move up
+bindsym $mod+Shift+semicolon move right
+
+# alternatively, you can use the cursor keys:
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Down move down
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Right move right
+
+# split in horizontal orientation
+bindsym $mod+h split h
+
+# split in vertical orientation
+bindsym $mod+v split v
+
+# enter fullscreen mode for the focused container
+bindsym $mod+f fullscreen toggle
+
+# change container layout (stacked, tabbed, toggle split)
+bindsym $mod+s layout stacking
+bindsym $mod+w layout tabbed
+bindsym $mod+e layout toggle split
+
+# toggle tiling / floating
+bindsym $mod+Shift+space floating toggle
+
+# change focus between tiling / floating windows
+bindsym $mod+space focus mode_toggle
+
+# focus the parent container
+bindsym $mod+a focus parent
+
+# focus the child container
+#bindsym $mod+d focus child
+
+# move stuff between scratchpad/workspaces
+bindsym $mod+m move scratchpad
+bindsym $mod+o scratchpad show
+
+# reload the configuration file
+bindsym $mod+Shift+c reload
+
+# restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
+bindsym $mod+Shift+r restart
+
+# exit i3 (logs you out of your X session)
+bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'Really exit i3?' -b 'Yes, exit i3' 'i3-msg exit'"
+
+# resize window (you can also use the mouse for that)
+bindsym $mod+r mode "resize"
+mode "resize" {
+	# These bindings trigger as soon as you enter the resize mode
+
+	# Pressing left will shrink the window's width.
+	# Pressing right will grow the window's width.
+	# Pressing up will shrink the window's height.
+	# Pressing down will grow the window's height.
+	bindsym j resize shrink width 10 px or 10 ppt
+	bindsym k resize grow height 10 px or 10 ppt
+	bindsym l resize shrink height 10 px or 10 ppt
+	bindsym semicolon resize grow width 10 px or 10 ppt
+
+	# same bindings, but for the arrow keys
+	bindsym Left resize shrink width 10 px or 10 ppt
+	bindsym Down resize grow height 10 px or 10 ppt
+	bindsym Up resize shrink height 10 px or 10 ppt
+	bindsym Right resize grow width 10 px or 10 ppt
+
+	# back to normal: Enter or Escape
+	bindsym Return mode "default"
+	bindsym Escape mode "default"
+}
+
+bindsym $Mod+shift+g gaps inner all minus 5; gaps outer all minus 5
+bindsym $Mod+shift+h gaps inner all plus 5; gaps outer all plus 5
+bindsym $Mod+shift+ctrl+g gaps inner current minus 5; gaps outer current minus 5
+bindsym $Mod+shift+ctrl+h gaps inner current plus 5; gaps outer current plus 5
+
+# -- workspace config -- #
+
+# toggle back to previous workspace
+workspace_auto_back_and_forth yes
+
+# switch to workspace
+bindsym $mod+1 workspace 1
+bindsym $mod+2 workspace 2
+bindsym $mod+3 workspace 3
+bindsym $mod+4 workspace 4
+bindsym $mod+5 workspace 5
+bindsym $mod+6 workspace 6
+bindsym $mod+7 workspace 7
+bindsym $mod+8 workspace 8
+bindsym $mod+9 workspace 9
+bindsym $mod+0 workspace 10
+
+# move focused container to workspace
+bindsym $mod+Shift+1 move container to workspace 1
+bindsym $mod+Shift+2 move container to workspace 2
+bindsym $mod+Shift+3 move container to workspace 3
+bindsym $mod+Shift+4 move container to workspace 4
+bindsym $mod+Shift+5 move container to workspace 5
+bindsym $mod+Shift+6 move container to workspace 6
+bindsym $mod+Shift+7 move container to workspace 7
+bindsym $mod+Shift+8 move container to workspace 8
+bindsym $mod+Shift+9 move container to workspace 9
+bindsym $mod+Shift+0 move container to workspace 10
+
+{{if .Layout.MoveWorkspace}}
+# move workspace to display
+{{range $key, $value := .Layout.MoveWorkspace}}
+bindsym {{$key}} move workspace to output {{$value}}
+{{end}}
+{{end}}
+
+{{if .Layout.WorkspaceToDisplay}}
+# assign workspaces to displays
+{{range $key, $value := .Layout.WorkspaceToDisplay}}
+workspace {{$key}} output {{$value}}
+{{end}}
+{{end}}
+
+# -- per-application config -- #
+
+# bind programs to workspaces
+{{range $key, $value := .ApplicationBindings}}
+assign {{$key}} {{$value}}
+{{end}}
+
+# -- miscellaneous config -- #
+
+# start misc stuff
+exec --no-startup-id xrandr --output {{.DetectedMonitors.Primary}} --primary
+{{range .StartupPrograms}}
+exec --no-startup-id {{.}}
+{{end}}
+
+# -- hotkey config -- #
+
+bindsym XF86HomePage exec /usr/bin/nemo
+bindsym XF86Search exec /usr/bin/pavucontrol
+bindsym XF86Mail exec /usr/bin/blueberry
+bindsym $mod+XF86Launch7 exec /usr/bin/bash -c '/usr/bin/curl https://wh.node-red.int.analbeard.com/webhook/pikatea/office/lights/toggle -m 1 -u "webhook:rqXyEdjtPx95KCvRz2Af6AgQhdSaU9"'
+bindsym $mod+XF86Launch6 exec /usr/bin/bash -c '/home/shw/.config/pikatea/google-meet-ctl.sh mute'
+bindsym $mod+XF86Launch5 exec /usr/bin/bash -c '/home/shw/.config/pikatea/google-meet-ctl.sh hand'
+
+# -- specific application config -- #
+
+# always floating
+{{range .WindowOverrides}}
+for_window {{.}}
+{{end}}
+
+# -- gaps-specific config -- #
+
+# i3 gaps config
+gaps inner {{.Layout.GapsInner}}
+gaps outer {{.Layout.GapsOuter}}
