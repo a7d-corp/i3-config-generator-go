@@ -19,7 +19,7 @@ func main() {
 		log.Fatalf("Error parsing arguments: %v", err)
 	}
 
-		// Load configuration
+	// Load configuration
 	loader := config.NewLoader("")
 	var cfg *config.Config
 	if args.ConfigPath != "" {
@@ -37,7 +37,10 @@ func main() {
 	var detectedMonitors *monitor.DetectedMonitors
 	if cfg.UseDetectedMonitors {
 		fmt.Printf("✓ Detecting monitors...\n")
-		detector := monitor.NewDetector(cfg.MonitorDetection)
+		detector, err := cfg.CreateDetector()
+		if err != nil {
+			log.Fatalf("Failed to create monitor detector: %v", err)
+		}
 		detectedMonitors, err = detector.DetectMonitors()
 		if err != nil {
 			log.Fatalf("Failed to detect monitors: %v", err)

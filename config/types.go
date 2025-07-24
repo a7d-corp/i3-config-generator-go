@@ -6,11 +6,10 @@ import (
 	"github.com/a7d-corp/i3-config-generator-go/monitor"
 )
 
-// Config represents the complete configuration structure
 type Config struct {
 	I3                  I3Config                `yaml:"i3"`
 	UseDetectedMonitors bool                    `yaml:"use_detected_monitors"`
-	MonitorDetection    monitor.MonitorConfig   `yaml:"monitor_detection"`
+	MonitorDetection    MonitorConfig           `yaml:"monitor_detection"`
 	Layouts             map[string]LayoutConfig `yaml:"layouts"`
 	ApplicationBindings map[string]string       `yaml:"application_bindings"`
 	StartupPrograms     []string                `yaml:"startup_programs"`
@@ -18,13 +17,24 @@ type Config struct {
 	Colors              ColorConfig             `yaml:"colors"`
 }
 
-// I3Config holds basic i3 window manager settings
 type I3Config struct {
 	ModKey  string `yaml:"mod_key"`
 	BarFont string `yaml:"bar_font"`
 }
 
-// LayoutConfig represents a screen layout configuration (two_mon, one_mon, no_mon)
+type MonitorConfig struct {
+	// Native X11 detection settings (preferred)
+	UseNative bool   `yaml:"use_native"`
+	Display   string `yaml:"display"`
+
+	// Legacy shell command detection (deprecated but supported)
+	DetectionCommand string `yaml:"detection_command"`
+
+	// Common settings for both approaches
+	DummyMonitors []string `yaml:"dummy_monitors"`
+	MinMonitors   int      `yaml:"min_monitors"`
+}
+
 type LayoutConfig struct {
 	GapsInner          int               `yaml:"gaps_inner"`
 	GapsOuter          int               `yaml:"gaps_outer"`
@@ -32,7 +42,6 @@ type LayoutConfig struct {
 	WorkspaceToDisplay map[string]string `yaml:"workspace_to_display"`
 }
 
-// ColorConfig holds the color scheme configuration
 type ColorConfig struct {
 	Base00 string `yaml:"base00"`
 	Base01 string `yaml:"base01"`
@@ -54,23 +63,54 @@ type ColorConfig struct {
 
 // Validate checks if the configuration is valid
 func (c *Config) Validate() error {
-	// Basic validation - can be expanded later
 	if c.I3.ModKey == "" {
 		return fmt.Errorf("i3.mod_key is required")
 	}
 
-	if c.UseDetectedMonitors && c.MonitorDetection.DetectionCommand == "" {
-		return fmt.Errorf("monitor_detection.detection_command is required when use_detected_monitors is true")
+	if c.UseDetectedMonitors {
+		// Check if either native detection is enabled or command detection is configured
+		if !c.MonitorDetection.UseNative && c.MonitorDetection.DetectionCommand == "" {
+			return fmt.Errorf("monitor detection is enabled but neither use_native nor detection_command is configured")
+		}
 	}
 
 	return nil
 }
 
-// GetLayout returns the layout configuration for the given layout name
+// GetLayout returns the layout configuration for the given name
 func (c *Config) GetLayout(layoutName string) (*LayoutConfig, error) {
 	layout, exists := c.Layouts[layoutName]
 	if !exists {
-		return nil, fmt.Errorf("layout '%s' not found in configuration", layoutName)
+		return nil, fmt.Errorf("layout '%s' not found", layoutName)
 	}
 	return &layout, nil
+}
+
+// CreateDetector creates an appropriate monitor detector based on configuration
+func (c *Config) CreateDetector() (monitor.MonitorDetector, error) {
+	if !c.UseDetectedMonitors {
+		return nil, fmt.Errorf("monitor detection is disabled")
+	}
+
+	// Prefer native detection
+	if c.MonitorDetection.UseNative {
+		return monitor.NewNativeDetector(
+			c.MonitorDetection.Display,
+			c.MonitorDetection.DummyMonitors,
+			c.MonitorDetection.MinMonitors,
+		), nil
+	}
+
+	// Fall back to shell command detection if configured
+	if c.MonitorDetection.DetectionCommand != "" {
+		// Convert to the old MonitorConfig format for backward compatibility
+		oldConfig := monitor.MonitorConfig{
+			DetectionCommand: c.MonitorDetection.DetectionCommand,
+			DummyMonitors:    c.MonitorDetection.DummyMonitors,
+			MinMonitors:      c.MonitorDetection.MinMonitors,
+		}
+		return monitor.NewDetector(oldConfig), nil
+	}
+
+	return nil, fmt.Errorf("no valid monitor detection method configured")
 }
