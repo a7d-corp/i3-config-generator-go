@@ -4,8 +4,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-
-	"github.com/a7d-corp/i3-config-generator-go/monitor"
 )
 
 func TestLoader_findConfigFile(t *testing.T) {
@@ -76,6 +74,7 @@ i3:
 use_detected_monitors: true
 
 monitor_detection:
+  use_native: false
   detection_command: "xrandr | awk '/ connected/' | awk '{print $1}'"
   dummy_monitors:
     - "dummy1"
@@ -157,11 +156,24 @@ func TestConfig_Validate(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "valid config",
+			name: "valid config with native detection",
 			config: Config{
 				I3:                  I3Config{ModKey: "Mod4"},
 				UseDetectedMonitors: true,
-				MonitorDetection: monitor.MonitorConfig{
+				MonitorDetection: MonitorConfig{
+					UseNative: true,
+					Display:   ":0",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid config with shell command detection",
+			config: Config{
+				I3:                  I3Config{ModKey: "Mod4"},
+				UseDetectedMonitors: true,
+				MonitorDetection: MonitorConfig{
+					UseNative:        false,
 					DetectionCommand: "xrandr | awk '/ connected/' | awk '{print $1}'",
 				},
 			},
@@ -175,11 +187,12 @@ func TestConfig_Validate(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "monitor detection enabled but no command",
+			name: "monitor detection enabled but no detection method",
 			config: Config{
 				I3:                  I3Config{ModKey: "Mod4"},
 				UseDetectedMonitors: true,
-				MonitorDetection: monitor.MonitorConfig{
+				MonitorDetection: MonitorConfig{
+					UseNative:        false,
 					DetectionCommand: "",
 				},
 			},
