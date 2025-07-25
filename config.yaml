@@ -1,0 +1,114 @@
+# i3 Configuration Generator - YAML Configuration
+# This file contains all host-specific and layout-specific configuration
+
+# Basic i3 settings
+i3:
+  mod_key: "Mod4"
+  bar_font: "pango:SFNS Display 7, FontAwesome 7"
+
+# Monitor detection is enabled for all hosts
+use_detected_monitors: true
+
+# Monitor detection settings
+monitor_detection:
+  # Use native X11 RandR detection (recommended)
+  use_native: true
+  # X11 display to connect to (default: ":0")
+  display: ":0"
+
+  # Legacy shell command detection (deprecated, but supported for compatibility)
+  # detection_command: "xrandr | awk '/ connected/' | awk '{print $1}'"
+
+  # Dummy monitor names to use when fewer than 3 monitors are detected
+  dummy_monitors:
+    - "dummy1"
+    - "dummy2"
+  # Minimum number of monitors to ensure in the array (will pad with dummies)
+  min_monitors: 3
+  # Monitor assignment logic:
+  #   - primary_display: First detected monitor (index 0)
+  #   - left_display: Second detected monitor (index 1, or 'dummy1' if not available)
+  #   - right_display: Third detected monitor (index 2, or 'dummy2' if not available)
+
+# Screen layout configurations
+layouts:
+  two_mon:
+    gaps_inner: 20
+    gaps_outer: 0
+    # Keyboard shortcuts to move workspaces between displays
+    move_workspace:
+      "Ctrl+Shift+1": "left_display"    # References host display names
+      "Ctrl+Shift+2": "right_display"
+      "Ctrl+Shift+3": "primary_display"
+    # Which display each workspace should appear on by default
+    workspace_to_display:
+      "1": "left_display"
+      "2": "left_display"
+      "3": "right_display"
+      "4": "primary_display"
+      "5": "right_display"
+      "6": "right_display"
+
+  one_mon:
+    gaps_inner: 20
+    gaps_outer: 0
+    move_workspace:
+      "Ctrl+Shift+1": "left_display"
+      "Ctrl+Shift+2": "primary_display"
+    workspace_to_display:
+      "1": "left_display"
+      "2": "left_display"
+      "3": "left_display"
+      "4": "primary_display"
+      "5": "primary_display"
+      "6": "left_display"
+
+  no_mon:
+    gaps_inner: 20
+    gaps_outer: 0
+    move_workspace: {}
+    workspace_to_display: {}
+
+# Application window class to workspace bindings
+application_bindings:
+  "[class=\"^Firefox$\"]": "1"
+  "[class=\"^Chromium$\"]": "3"
+  "[class=\"^code - oss\"]": "6"
+  "[class=\"^[Ss]potify.*$\"]": "7"
+  "[class=\"^[Ss]lack\"]": "4"
+
+# Programs to run on i3 startup
+startup_programs:
+  - "/usr/bin/numlockx on"
+
+# Window-specific overrides (floating, borders, etc.)
+window_overrides:
+  - "[class=\"^[Vv]irtual[Bb]ox*$\"] floating enable"
+  - "[class=\"^[Tt]ransmission*$\"] floating enable border normal"
+  - "[class=\"^qemu-system-x86_64*$\"] floating enable"
+  - "[class=\"^[Ff]ile-roller.*$\"] floating enable border normal"
+  - "[class=\"[Vv]irt-manager.*$\"] floating enable border normal"
+  - "[window_role=\"pop-up\"] floating enable border normal"
+  - "[class=\"^[Pp]avucontrol.*$\"] floating enable border normal"
+  - "[class=\"^[Bb]lueberry.py.*$\"] floating enable border normal"
+  - "[class=\"^[Gg]ufw.py.*$\"] floating enable border normal"
+  - "[class=\"^[Bb]itwarden.*$\"] floating enable border normal"
+
+# Color scheme (Ocean theme from the template)
+colors:
+  base00: "#1B2B34"
+  base01: "#343D46"
+  base02: "#4F5B66"
+  base03: "#65737E"
+  base04: "#A7ADBA"
+  base05: "#C0C5CE"
+  base06: "#CDD3DE"
+  base07: "#D8DEE9"
+  base08: "#EC5f67"
+  base09: "#F99157"
+  base0A: "#FAC863"
+  base0B: "#99C794"
+  base0C: "#5FB3B3"
+  base0D: "#6699CC"
+  base0E: "#C594C5"
+  base0F: "#AB7967"
