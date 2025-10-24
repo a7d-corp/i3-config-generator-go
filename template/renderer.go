@@ -1,6 +1,7 @@
 package template
 
 import (
+	"embed"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +10,9 @@ import (
 	"github.com/a7d-corp/i3-config-generator-go/config"
 	"github.com/a7d-corp/i3-config-generator-go/monitor"
 )
+
+//go:embed i3.tmpl
+var embeddedTemplates embed.FS
 
 // TemplateData represents the data structure passed to the template
 type TemplateData struct {
@@ -107,17 +111,31 @@ func (r *Renderer) resolveLayoutReferences(layout *config.LayoutConfig, detected
 
 // renderTemplate loads and renders the specified template file
 func (r *Renderer) renderTemplate(templateFile string, data *TemplateData) (string, error) {
-	templatePath := filepath.Join(r.templateDir, templateFile)
+	var tmpl *template.Template
+	var err error
 
-	// Check if template file exists
-	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
-		return "", fmt.Errorf("template file not found: %s", templatePath)
+	// First, try to load from filesystem (for development/customization)
+	if r.templateDir != "" {
+		templatePath := filepath.Join(r.templateDir, templateFile)
+		if _, statErr := os.Stat(templatePath); statErr == nil {
+			// External template file exists, use it
+			tmpl, err = template.ParseFiles(templatePath)
+			if err != nil {
+				return "", fmt.Errorf("failed to parse template %s: %w", templatePath, err)
+			}
+		}
 	}
 
-	// Parse the template
-	tmpl, err := template.ParseFiles(templatePath)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse template %s: %w", templatePath, err)
+	// If no external template found, use embedded template
+	if tmpl == nil {
+		templateContent, err := embeddedTemplates.ReadFile(templateFile)
+		if err != nil {
+			return "", fmt.Errorf("template file not found: %s (neither in filesystem nor embedded)", templateFile)
+		}
+		tmpl, err = template.New(templateFile).Parse(string(templateContent))
+		if err != nil {
+			return "", fmt.Errorf("failed to parse embedded template %s: %w", templateFile, err)
+		}
 	}
 
 	// Create a buffer to capture the rendered output
